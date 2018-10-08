@@ -1,5 +1,4 @@
-#include <sys/time.h>
-
+#include "system_tools.h"
 
 double clock(void)
 {

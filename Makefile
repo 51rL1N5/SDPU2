@@ -1,16 +1,20 @@
-BASEDIR	=	.
-SOURCE_DIR = ./lib
+BASEDIR	=
 
 CC	=	g++
 CXX	=	g++
 CPPFLAGS = -Wall -O2 -I ${BASEDIR}/include
 CFLAGS =
 LDFLAGS = -L ${BASEDIR}/lib
-LDLIBS =	-lpthread
+LDLIBS =	-lsystem_tools	-lsocket_linux
 
-PROGRAMAS	=	main
+GENERATED	=	main	#programas_outros
 
-all:	${PROGRAMAS}
+
+all:	${GENERATED}
+
+build:
+	cd	src/tools	&&	${MAKE}	install
+	cd	src/socket	&&	${MAKE}	install
 
 clean:
-	rm -f ${PROGRAMAS}
+	rm -f ${GENERATED}

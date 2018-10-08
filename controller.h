@@ -2,12 +2,9 @@
 #include <thread> // std::thread
 #include <sys/time.h> //timeval
 
+#include "../system_tools.h"
 #include "socket_linux.h" //class Socket_4Linux
 #include "acquisition.h"
-// Funcoes auxiliares
-namespace tools{
-  double clock(void); //funcao que retorna o tempo do sistema em segundos
-};
 
 // Modos de operacao
 // Defininem o comportamento do secador
