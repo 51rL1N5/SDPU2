@@ -1,7 +1,9 @@
 #include "controller.h"
 
 int main(){
-  Controller ctrl_Fan(MODE::DEFAULT, string , outors...);
-  ctrl_Fan.run();
+  int port = 300000;
+  Controller ctrl_Fan(MODE::DEFAULT, port);
+  ctrl_Fan.start();
+
   return 0;
 }

@@ -1,5 +1,4 @@
 //Referencias:
-// http://softwarelivre.blog.br/2014/05/30/programacao-de-sockets-para-linux/
 // http://tldp.org/LDP/LG/issue74/misc/tougher/Socket.h.txt
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -50,6 +49,7 @@ public:
  const ServerSocket& operator >> ( std::string& ) const;
 
  void accept ( ServerSocket& );
+ // WARNING Implementacoes futuras:
  // void close(ServerSocket& );
 };
 

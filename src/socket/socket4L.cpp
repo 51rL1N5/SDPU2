@@ -5,13 +5,9 @@
 #include "socket4L.h"
 
 Socket::Socket() :
-  m_sock ( -1 )
+  m_sock (-1)
 {
-
-  memset ( &m_addr,
-	   0,
-	   sizeof ( m_addr ) );
-
+  memset ( &m_addr,0,sizeof ( m_addr ) );
 }
 
 Socket::~Socket()
@@ -22,22 +18,17 @@ Socket::~Socket()
 
 bool Socket::create()
 {
-  m_sock = socket ( AF_INET,
-		    SOCK_STREAM,
-		    0 );
+  m_sock = socket (AF_INET, SOCK_STREAM, 0);
 
   if ( ! is_valid() )
     return false;
-
 
   // TIME_WAIT - argh
   int on = 1;
   if ( setsockopt ( m_sock, SOL_SOCKET, SO_REUSEADDR, ( const char* ) &on, sizeof ( on ) ) == -1 )
     return false;
 
-
   return true;
-
 }
 
 
@@ -75,13 +66,12 @@ bool Socket::listen() const
       return false;
     }
 
-  int listen_return = ::listen ( m_sock, MAXCONNECTIONS );
-
+  int listen_return = ::listen ( m_sock, MAXCONNECTIONS);
 
   if ( listen_return == -1 )
-    {
-      return false;
-    }
+  {
+    return false;
+  }
 
   return true;
 }
