@@ -2,9 +2,9 @@
 #include <thread> // std::thread
 #include <sys/time.h> //timeval
 
-#include "../system_tools.h"
-#include "socket_linux.h" //class Socket_4Linux
-#include "acquisition.h"
+#include <system_tools.h>
+#include <socket_linux.h> //class Socket_4Linux
+// #include <acquisition.h>
 
 // Modos de operacao
 // Defininem o comportamento do secador
@@ -16,7 +16,7 @@ enum MODE{
 };
 
 class Controller:
-  public Socket_4Linux,
+  public Socket4L,
   public Acquisition
 {
 private:

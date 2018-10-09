@@ -7,17 +7,21 @@ CFLAGS =
 LDFLAGS = -L ${BASEDIR}/lib
 LDLIBS =	-lpthread
 
-GENERATED	=	#teste_Socket4L
+GENERATED	=	teste_server	teste_client
 
-all:	${GENERATED}	libsocket_linux.a
+all:	${GENERATED}	libsocket4L.a	
 
-install:	libsocket_linux.a
-	cp -f libsocket_linux.a ${BASEDIR}/lib
-	cp -f socket_linux.h ${BASEDIR}/include
+${GENERATED}:	libsocket4L.a
 
-libsocket_linux.a:	socket_linux.o
+libsocket4L.a:	socket4L.o
+	ar r $@ $?
 
-socket_linux.o:	socket_linux.cpp	socket_linux.h
+socket4L.o:	socket4L.cpp	socket4L.h
+
+
+install:	libsocket4L.a
+	cp -f libsocket4L.a ${BASEDIR}/lib
+	cp -f socket4L.h ${BASEDIR}/include
 
 clean:
 	rm -f ${GENERATED}

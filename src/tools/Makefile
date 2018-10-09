@@ -13,13 +13,14 @@ all:	${GENERATED}
 
 ${GENERATED}:	libsystem_tools.a
 
+libsystem_tools.a:	system_tools.o
+	ar r $@ $?
+
+system_tools.o:	system_tools.cpp	system_tools.h
+
 install:	libsystem_tools.a
 	cp -f libsystem_tools.a ${BASEDIR}/lib
 	cp -f system_tools.h ${BASEDIR}/include
-
-libsystem_tools.a:	system_tools.o
-
-system_tools.o:	system_tools.cpp	system_tools.h
 
 clean:
 	rm -f ${GENERATED}

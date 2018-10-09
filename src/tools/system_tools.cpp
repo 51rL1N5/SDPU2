@@ -1,6 +1,7 @@
+#include <cstddef> //NULL
 #include "system_tools.h"
 
-double clock(void)
+double tools::clock(void)
 {
   static struct timeval tbase={-1,-1};
   struct timeval t;
