@@ -13,3 +13,15 @@ double tools::clock(void)
   }
   return( t.tv_sec-tbase.tv_sec + (t.tv_usec-tbase.tv_usec)/1000000.0 );
 }
+
+void tools::sleep(double segundos){
+  std::atomic<double> start(tools::clock());
+  while((tools::clock() - start) < segundos){};
+};
+
+void tools::sleep_us(unsigned int usec){
+  std::atomic<double> start(tools::clock());
+  std::atomic<double> end(usec);
+  end = end/1000000.0;//nao realizar a divisao sem antes passar para atomic (teste de eficiencia)
+  while( (tools::clock() - start) < end) {};
+};

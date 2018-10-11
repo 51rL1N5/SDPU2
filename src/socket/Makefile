@@ -5,11 +5,11 @@ CXX	=	g++
 CPPFLAGS = -Wall -O2 -I ${BASEDIR}/include
 CFLAGS =
 LDFLAGS = -L ${BASEDIR}/lib
-LDLIBS =	-lpthread
+LDLIBS =
 
 GENERATED	=	teste_server	teste_client
 
-all:	${GENERATED}	libsocket4L.a	
+all:	${GENERATED}	libsocket4L.a
 
 ${GENERATED}:	libsocket4L.a
 
@@ -18,10 +18,9 @@ libsocket4L.a:	socket4L.o
 
 socket4L.o:	socket4L.cpp	socket4L.h
 
-
 install:	libsocket4L.a
 	cp -f libsocket4L.a ${BASEDIR}/lib
 	cp -f socket4L.h ${BASEDIR}/include
 
 clean:
-	rm -f ${GENERATED}
+	rm -f ${GENERATED}	*.a

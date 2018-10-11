@@ -1,5 +1,3 @@
-//Referencias:
-// http://tldp.org/LDP/LG/issue74/misc/tougher/Socket.h.txt
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>

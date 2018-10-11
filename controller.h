@@ -4,6 +4,7 @@
 
 #include <mraa/commom.hpp>
 #include <mraa/gpio.hpp>
+#include <mraa/pwm.hpp>
 
 #include <socket4L.h> //class Socket_4Linux
 #include <system_tools.h>
