@@ -5,5 +5,9 @@ int main(){
   Controller ctrl_Fan(MODE::DEFAULT, port);
   ctrl_Fan.start();
 
+  while(ctrl_Fan.inOperation()){
+    //codigo paralelo ao controle
+  };
+
   return 0;
 }

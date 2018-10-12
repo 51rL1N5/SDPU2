@@ -5,15 +5,24 @@
 #include <mraa/commom.hpp>
 #include <mraa/gpio.hpp>
 #include <mraa/pwm.hpp>
+#include <mraa/aio.hpp>
 
 #include <socket4L.h> //class Socket_4Linux
 #include <system_tools.h>
+
+//para minimizar o efeito do debounce no botao de acionamento
+#define TIME_DEBOUNCE 0.3 //segundos
+#define REF_4_TEMP  27   //graus Celcius
+#define REF_4_LUMI  500  //unidade de luminocidade
+#define ALPHA 1.0/90     // inverso da maxima temperatura esperada
+#define BETA 1.0/1000    // inverso da maxima luminancia esperada
 // Modos de operacao
 // Defininem o comportamento do secador de graos
 enum MODE{
   DEFAULT,//gera a curva padrao
   MODE1,  //igual ao modo Default
-  MODE2
+  MODE2,
+  MODE4FUN
   // ...
 };
 
@@ -24,20 +33,21 @@ class Controller
   //ver multex
 private:
   ServerSocket serverCtrl;
-  MODE myMode;
+  MODE mode;
   bool enable;  //Flag para ativar/desativar o sistema, True: habilitado, False: desabilitado
 
-  mraa::Gpio gpio_LedEnable;
-  mraa::Gpio gpio_HumidSensor;
-  mraa::Gpio gpio_Button;
-  mraa::Pwm  pwm_LedSensor;
-  mraa::Pwm  pwm_LedPWM;
-  mraa::Pwm  pwm_DriveFan;
+  mraa::Gpio gpioLedEnable;
+  mraa::Gpio gpioButton;
+  mraa::Aio  aioLumi;
+  mraa::Aio  aioTemp;
+  mraa::Pwm  pwmLedSensor;
+  mraa::Pwm  pwmDriveFan;
 
+  double timeRef_debounce;
   std::atomic<bool> newData; //Ha dados dos sensores para serem lidos
   std::atomic<uint8_t> temp; //valor de temperatura em graus celcius
-  std::atomic<uint8_t> humid;//valor da humidade relativade ( 0% ate 100%)
-
+  std::atomic<uint8_t> lumin;//valor da humidade relativade ( 0% ate 100%)
+  std::atomic<float> pwmValueDrive;
 
   // thread para leitura de dados
   std::thread thr_acquisition;
@@ -51,21 +61,21 @@ private:
   //Funcao que sera associada a interrupcao do botao
   void botton_interrupt();
 
-  enum PINS{
-    LED_enable,  // Pino do led para indicar o estados do sistema: ON/OFF
-    LED_Sensor,  // Pino do Led associado a a leitura de um dos sensores
-    LED_PWM,     // Pino do Led associado ao PWM enviado ao drive do motor
-    BUTTON,      // Pino associado ao botao
-    DRIVE_Fan,   // Pino para PWM do motor
-    SENSOR_Humid,// Pino para leitura AD do sensor de umidade
-    Sensor_Temp  // Pino para leitura AD do sensor de temperatura
+  enum PIN{
+    LedEnable  = 8, // Pino do led para indicar o estados do sistema: ON/OFF
+    LedSensor  = 5, // Pino do Led associado a a leitura de um dos sensores
+    Button     = 9, // Pino associado ao botao
+    DriveFan   = 3, // Pino para PWM do motor
+    SensorLumi = 1, // Pino para leitura AD do sensor de luminancia
+    SensorTemp = 0  // Pino para leitura AD do sensor de temperatura
   };
 
   //Funcoes que ditam o comportamento da saida PWM para o motor
   //retornam o valor do PWM
-  uint8_t curve(); //este eh o metodo que deve ser chamado para o retorno final(ele chaveia entre os demais, de acordo com o modo atual)
-  uint8_t curve_1(); //curva padrao
-  uint8_t curve_2(); //curva 2
+  //equivalente ao Z(t) no projeto
+  float curve(const float& t); //este eh o metodo que deve ser chamado para o retorno final(ele chaveia entre os demais, de acordo com o modo atual)
+  float curve01(const float& t); //curva padrao
+  float curve02(const float& t); //curva 2
   //Metodos para as threads:
   void pinController();
   void comunication();
@@ -75,8 +85,10 @@ private:
   friend void func_pinController(const void*X);
   friend void func_comunication(const void*X);
   friend void func_acquisition(const void*X);
+  friend void func_button_interrupt(const void*X);
+  //desliga o sistema e encerra o processo
+  void shutdown();
 public:
-
   Controller(MODE mode = DEFAULT, int port = 300000);
   ~Controller();
 
@@ -90,7 +102,7 @@ public:
   //Suspende o sistema temporariamente
   //ao ser religado com start(), o sistema retoma
   //da onde parou
-  void stop();
-  //desliga o sistemas
+  inline void stop(){ this->enable = false; };//so desabilita o sistema, mas n encerra o processo
+  //desliga o sistema e encerra o processo
   void shutdown();
 };
