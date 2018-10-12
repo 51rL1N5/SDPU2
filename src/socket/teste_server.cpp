@@ -1,27 +1,27 @@
 // #include "SocketException.h"
 #include <string>
 #include <iostream>
+
 #include "socket4L.h"
 
-int main ( int argc, int argv[] )
+int main ()
 {
-  std::cout << "running....\n";
-
-  // Create the socket
-  // ServerSocket server( 30000 );
-  ServerSocket server2;
-
-  server2.create();
-  server2.bind(30000);
-  server2.listen();
-
+  ServerSocket server;
   ServerSocket newSock;
-  server2.accept(newSock);
+  std::string dataInput;
 
-  std::string data;
-  newSock >> data;
-  std::cerr << "Dado recebido: "<< data << '\n';
-  newSock << std::string("Mahoe!");
+  server.create();
+  server.bind(30000);
+
+  std::cout << "running....\n";
+  while(true){
+    server.listen();
+    server.accept(newSock);
+    newSock >> dataInput;
+
+    newSock << dataInput;
+    newSock.disconnect();
+  }
 
   return 0;
 }

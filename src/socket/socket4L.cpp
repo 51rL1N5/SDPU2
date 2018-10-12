@@ -1,11 +1,13 @@
 #include <iostream>
 #include <fcntl.h>
 #include <string.h>
+#include <stdlib.h> 
 #include <errno.h>
 #include "socket4L.h"
 
 Socket::Socket() :
-  m_sock (-1)
+  m_sock (-1),
+  connected(false)
 {
   memset ( &m_addr,0,sizeof ( m_addr ) );
 }
@@ -139,10 +141,22 @@ bool Socket::connect ( const std::string host, const int port )
 
   status = ::connect ( m_sock, ( sockaddr * ) &m_addr, sizeof ( m_addr ) );
 
-  if ( status == 0 )
+  if ( status == 0 ){
+    connected = true;
     return true;
-  else
+  }
+  else{
+    connected = false;
     return false;
+  }
+}
+
+bool Socket::disconnect(){
+  if(!connected)
+    return false;
+  close(m_sock);
+  connected = false;
+  return true;
 }
 
 void Socket::set_non_blocking ( const bool b )
@@ -165,6 +179,27 @@ void Socket::set_non_blocking ( const bool b )
   fcntl ( m_sock,
 	  F_SETFL,opts );
 
+}
+
+
+const Socket& Socket::operator << ( const std::string& s ) const
+{
+  if ( !Socket::send(s)){
+    // throw SocketException ( "Could not write to socket." );
+    std::cerr << "Could not write to socket" << '\n';
+    exit(1);
+  }
+  return *this;
+}
+
+const Socket& Socket::operator >> ( std::string& s ) const
+{
+  if (!Socket::recv(s)){
+    // throw SocketException ( "Could not read from socket." );
+    std::cerr << "Could not read from socket." << '\n';
+    exit(1);
+  }
+  return *this;
 }
 
 /*##################################################################*/
@@ -197,25 +232,25 @@ ServerSocket::~ServerSocket()
 {
 }
 
-const ServerSocket& ServerSocket::operator << ( const std::string& s ) const
-{
-  if ( !Socket::send(s)){
-    // throw SocketException ( "Could not write to socket." );
-    std::cerr << "Could not write to socket" << '\n';
-    exit(1);
-  }
-  return *this;
-}
-
-const ServerSocket& ServerSocket::operator >> ( std::string& s ) const
-{
-  if (!Socket::recv(s)){
-    // throw SocketException ( "Could not read from socket." );
-    std::cerr << "Could not read from socket." << '\n';
-    exit(1);
-  }
-  return *this;
-}
+// const ServerSocket& ServerSocket::operator << ( const std::string& s ) const
+// {
+//   if ( !Socket::send(s)){
+//     // throw SocketException ( "Could not write to socket." );
+//     std::cerr << "Could not write to socket" << '\n';
+//     exit(1);
+//   }
+//   return *this;
+// }
+//
+// const ServerSocket& ServerSocket::operator >> ( std::string& s ) const
+// {
+//   if (!Socket::recv(s)){
+//     // throw SocketException ( "Could not read from socket." );
+//     std::cerr << "Could not read from socket." << '\n';
+//     exit(1);
+//   }
+//   return *this;
+// }
 
 void ServerSocket::accept ( ServerSocket& sock)
 {
@@ -246,28 +281,28 @@ ClientSocket::ClientSocket ( std::string host, int port )
 }
 
 
-const ClientSocket& ClientSocket::operator << ( const std::string& s ) const
-{
-  if ( ! Socket::send ( s ) )
-    {
-      // throw SocketException ( "Could not write to socket." );
-      std::cerr << "Could not write to socket." << '\n';
-      exit(1);
-    }
-
-  return *this;
-
-}
-
-
-const ClientSocket& ClientSocket::operator >> ( std::string& s ) const
-{
-  if ( ! Socket::recv ( s ) )
-    {
-      // throw SocketException ( "Could not read from socket." );
-      std::cerr << "Could not read from socket." << '\n';
-      exit(1);
-    }
-
-  return *this;
-}
+// const ClientSocket& ClientSocket::operator << ( const std::string& s ) const
+// {
+//   if ( ! Socket::send ( s ) )
+//     {
+//       // throw SocketException ( "Could not write to socket." );
+//       std::cerr << "Could not write to socket." << '\n';
+//       exit(1);
+//     }
+//
+//   return *this;
+//
+// }
+//
+//
+// const ClientSocket& ClientSocket::operator >> ( std::string& s ) const
+// {
+//   if ( ! Socket::recv ( s ) )
+//     {
+//       // throw SocketException ( "Could not read from socket." );
+//       std::cerr << "Could not read from socket." << '\n';
+//       exit(1);
+//     }
+//
+//   return *this;
+// }

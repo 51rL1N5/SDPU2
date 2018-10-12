@@ -2,7 +2,7 @@
 #include <thread> // std::thread
 #include <sys/time.h> //timeval
 
-#include <mraa/commom.hpp>
+#include <mraa/common.hpp>
 #include <mraa/gpio.hpp>
 #include <mraa/pwm.hpp>
 #include <mraa/aio.hpp>
@@ -10,6 +10,7 @@
 #include <socket4L.h> //class Socket_4Linux
 #include <system_tools.h>
 
+#define PORT 30000
 //para minimizar o efeito do debounce no botao de acionamento
 #define TIME_DEBOUNCE 0.3 //segundos
 #define REF_4_TEMP  27   //graus Celcius
@@ -34,6 +35,7 @@ class Controller
 private:
   ServerSocket serverCtrl;
   MODE mode;
+  bool finish; //Flag para desligar o sistema
   bool enable;  //Flag para ativar/desativar o sistema, True: habilitado, False: desabilitado
 
   mraa::Gpio gpioLedEnable;
@@ -46,7 +48,7 @@ private:
   double timeRef_debounce;
   std::atomic<bool> newData; //Ha dados dos sensores para serem lidos
   std::atomic<uint8_t> temp; //valor de temperatura em graus celcius
-  std::atomic<uint8_t> lumin;//valor da humidade relativade ( 0% ate 100%)
+  std::atomic<uint8_t> lumin;//valor da luminancia
   std::atomic<float> pwmValueDrive;
 
   // thread para leitura de dados
@@ -85,20 +87,20 @@ private:
   friend void func_pinController(const void*X);
   friend void func_comunication(const void*X);
   friend void func_acquisition(const void*X);
-  friend void func_button_interrupt(const void*X);
+  friend void func_button_interrupt(void*X);
   //desliga o sistema e encerra o processo
-  void shutdown();
+  // void shutdown();
 public:
-  Controller(MODE mode = DEFAULT, int port = 300000);
+  Controller();
   ~Controller();
 
   //Retorna o status do sistema
-  inline bool inOperation()const {return  status;}
+  inline bool inOperation()const {return  finish;}
   //Aprincipio so sera usado por comandos via socket, logo n sera necessario este metodo para o main
-  MODE getMode()const {return my_mode};
+  MODE getMode()const {return mode;};
   void setMode(const MODE &new_mode);//Aprincipio so sera usado por comandos via socket, logo n sera necessario este metodo para o main
   //retoma o sistema da onde parou, ou inicia do zero
-  void start();
+  inline void start(){ this->enable = true; };
   //Suspende o sistema temporariamente
   //ao ser religado com start(), o sistema retoma
   //da onde parou

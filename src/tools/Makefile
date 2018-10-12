@@ -23,4 +23,4 @@ install:	libsystem_tools.a
 	cp -f system_tools.h ${BASEDIR}/include
 
 clean:
-	rm -f ${GENERATED}
+	rm -f ${GENERATED}	*.o

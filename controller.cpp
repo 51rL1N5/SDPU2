@@ -1,3 +1,5 @@
+#include <string>
+#include <iostream>
 #include "controller.h"
 
 //Funcoes auxiliares
@@ -8,22 +10,23 @@ void func_comunication(const void*X){
   ((Controller*)X)->comunication();
 }
 void func_acquisition(const void*X){
-  ((Controller*)X)->acquisitionr();
+  ((Controller*)X)->acquisition();
 }
 
-void func_button_interrupt(const void*X){
+void func_button_interrupt(void*X){
   ((Controller*)X)->botton_interrupt();
 }
 
 // Metodos da classe controle
 
-Controller::Controller(MODE mode, int port):
-  serverCtrl(port),
+Controller::Controller():
+  serverCtrl(),
   mode(mode),
   enable(false),
   newData(false),
   temp(0),
   lumin(0),
+  finish(false),
   pwmValueDrive(0),
   timeRef_debounce(0),
   gpioLedEnable(PIN::LedEnable),
@@ -43,11 +46,14 @@ Controller::Controller(MODE mode, int port):
   gpioLedEnable.write(0);
   gpioButton.write(0);
   //interrupcao para borda de descida
-  gpioButton.isr(mraa::EDGE_FALLING,func_button_interrupt, this);
+  gpioButton.isr(mraa::EDGE_FALLING,func_button_interrupt, (void*)this);
 
   //habilita as saidas pwm
   pwmLedSensor.enable(true);
   pwmDriveFan.enable(true);
+
+  serverCtrl.create();
+  serverCtrl.bind(PORT);
 }
 
 
@@ -63,31 +69,36 @@ void Controller::botton_interrupt(){
 }
 
 void Controller::pinController(){
-  if(!enable)//aguarda o sistema ser habilitado
-    std::this_thread::yield();
-  //funcionamento do sistema habilitado
-  LedEnable.write(1);
-  double t_start = tools::clock();
-  while(enable){
-    //pedido de leitura dos sensores
-    newData = true;
-    while(newData){};//aguarda a leitura dos dados
-    //entrando na zona critica
-    pwmValueDrive = curve(tools::clock() - t_start)*temp*ALPHA + lumin*BETA;
-    pwmDriveFan.write(pwmValueDrive);
-    pwmLedSensor.write(lumin*BETA);
-    //saindo da zona critica
-  };
-  //sistema passou de habilitado para desabilitado
-  LedEnable.write(0);
-  std::this_thread::yield();
+  while(!finish)
+  {
+    while(!enable)//aguarda o sistema ser habilitado
+      std::this_thread::yield();
+    //funcionamento do sistema habilitado
+    gpioLedEnable.write(1);
+    double t_start = tools::clock();
+    while(enable){
+      //pedido de leitura dos sensores
+      newData = true;
+      while(newData){
+        std::this_thread::yield();
+      };//aguarda a leitura dos dados
+      //entrando na zona critica
+      pwmValueDrive = curve(tools::clock() - t_start)*temp*ALPHA + lumin*BETA;
+      pwmDriveFan.write(pwmValueDrive);
+      pwmLedSensor.write(lumin*BETA);
+      //saindo da zona critica
+    };
+    //sistema passou de habilitado para desabilitado
+    gpioLedEnable.write(0);
+  }
 }
 
 void Controller::acquisition(){
-    if(!enable) //aguarda o sistema entrar em operacao
-      std::this_thread::yield();//volta pro inicio da thread
+  while(!finish){
+    // while(!enable) //aguarda o sistema entrar em operacao
+    //   std::this_thread::yield();//volta pro inicio da thread
 
-    if(this->newData == false)//aguarda pedido de novos dados
+    while((this->newData == false) || !enable)//aguarda pedido de novos dados
       std::this_thread::yield();//volta pro inicio da thread
     //zona critica
     this->temp    = aioTemp.read();
@@ -96,11 +107,60 @@ void Controller::acquisition(){
     lumin= lumin*(REF_4_LUMI/512);
     this->newData = false;
     //fim da zona critica
-    std::this_thread::yield();//volta pro inicio da thread
+    // std::this_thread::yield();//volta pro inicio da thread
+  }
 }
 
 void Controller::comunication(){
+  ServerSocket newSock;
+  std::string command;
+  std::string arg;
 
+  std::cout << "Server Controller ON..." << '\n';
+  while(!finish){
+    serverCtrl.listen();
+    serverCtrl.accept(newSock);
+
+
+    newSock >> command;
+    tools::str2upper(command);
+
+    if(command == "REQUEST"){
+      newSock << "OK";
+      newSock << std::to_string(pwmValueDrive);
+    }
+    else if(command == "START"){
+      newSock << "OK";
+      enable = true;
+    }
+    else if(command == "STOP"){
+      newSock << "OK";
+      enable = false;
+    }
+    else if(command == "SHUTDOWN"){
+      newSock << "OK";
+      finish = true;
+    }else if(command == "MODE"){
+      newSock << "OK";
+      newSock >> arg;
+      tools::str2upper(arg);
+      if(arg == "1"){
+        newSock << "OK";
+        this->setMode(MODE1);
+      }else if(arg == "2"){
+        newSock << "OK";
+        this->setMode(MODE2);
+      }else{
+        newSock << "INVALID_MODE";
+      }
+
+    }else{
+      newSock << "INVALID_COMMAND";
+    }
+
+    newSock.disconnect();
+  }
+  std::cout << "Server Controller OFF..." << '\n';
 }
 void Controller::shutdown(){
   thr_acquisition.join();
@@ -112,6 +172,9 @@ void Controller::shutdown(){
 
   gpioLedEnable.write(0);
   gpioButton.write(0);
+
+  enable = false;
+  finish = true;
 };
 
 void Controller::setMode(const MODE &new_mode){
@@ -120,7 +183,7 @@ void Controller::setMode(const MODE &new_mode){
 }
 
 float Controller::curve(const float& t){
-  switch (mode) {
+  switch (mode){
     case MODE1:
     case DEFAULT:
       return this->curve01(t);

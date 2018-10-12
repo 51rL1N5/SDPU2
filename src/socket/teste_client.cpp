@@ -1,19 +1,23 @@
 #include "socket4L.h"
-// #include "SocketException.h"
+
 #include <iostream>
 #include <string>
 
-int main ( int argc, int argv[] )
+int main ()
 {
 
-  ClientSocket client_socket ( "192.168.0.20", 30000 );
+  std::string resposta;
+  std::string msg;
 
-  std::string dado;
+  while(true){
+    ClientSocket client_socket ( "192.168.0.26", 30000 );
+    std::cout << "msg: ";
+    std::cin >> msg;
+    client_socket << msg;
+    client_socket >> resposta;
+    std::cout << "Comando recebido: "<<resposta << '\n';
+  }
 
-  client_socket << "Test message.";
-
-  client_socket >> dado;
-  std::cout << "Dado recebido do servidor: "<< dado << '\n';
 
   return 0;
 }

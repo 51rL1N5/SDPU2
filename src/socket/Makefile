@@ -23,4 +23,4 @@ install:	libsocket4L.a
 	cp -f socket4L.h ${BASEDIR}/include
 
 clean:
-	rm -f ${GENERATED}	*.a
+	rm -f ${GENERATED}	*.a	*.o

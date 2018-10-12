@@ -14,7 +14,7 @@ class Socket{
 private:
   int m_sock;
   sockaddr_in m_addr;
-
+  bool connected;
 public:
  Socket();
  virtual ~Socket();
@@ -27,10 +27,16 @@ public:
 
  // Client initialization
  bool connect ( const std::string host, const int port);
-
+ bool disconnect();
  // Data Transimission
  bool send(const std::string) const;
  int recv(std::string&) const;
+
+ const Socket& operator<<( const std::string& )const;
+ const Socket& operator>>( std::string& ) const;
+
+ // const Socket& operator<<(const std::string &msg);
+ // const Socket& operator>>(std::string &msg);
 
  void set_non_blocking ( const bool );
  bool is_valid() const { return m_sock != -1; }
@@ -43,9 +49,6 @@ public:
  ServerSocket (){};
  virtual ~ServerSocket();
 
- const ServerSocket& operator << ( const std::string& ) const;
- const ServerSocket& operator >> ( std::string& ) const;
-
  void accept ( ServerSocket& );
  // WARNING Implementacoes futuras:
  // void close(ServerSocket& );
@@ -57,10 +60,7 @@ public:
 class ClientSocket: public Socket
 {
  public:
-
   ClientSocket ( std::string host, int port );
   virtual ~ClientSocket(){};
 
-  const ClientSocket& operator << ( const std::string& ) const;
-  const ClientSocket& operator >> ( std::string& ) const;
 };
