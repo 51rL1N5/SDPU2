@@ -10,11 +10,11 @@
 #include <socket4L.h> //class Socket_4Linux
 #include <system_tools.h>
 
-#define PORT 30000
+#define PORT 28500
 //para minimizar o efeito do debounce no botao de acionamento
 #define TIME_DEBOUNCE 0.3 //segundos
-#define REF_4_TEMP  27   //graus Celcius
-#define REF_4_LUMI  500  //unidade de luminocidade
+#define REF_4_TEMP  27.0   //graus Celcius
+#define REF_4_LUMI  500.0  //unidade de luminocidade
 #define ALPHA 1.0/90     // inverso da maxima temperatura esperada
 #define BETA 1.0/1000    // inverso da maxima luminancia esperada
 // Modos de operacao
@@ -95,7 +95,7 @@ public:
   ~Controller();
 
   //Retorna o status do sistema
-  inline bool inOperation()const {return  finish;}
+  inline bool inOperation()const {return  !finish;}
   //Aprincipio so sera usado por comandos via socket, logo n sera necessario este metodo para o main
   MODE getMode()const {return mode;};
   void setMode(const MODE &new_mode);//Aprincipio so sera usado por comandos via socket, logo n sera necessario este metodo para o main
