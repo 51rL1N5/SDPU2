@@ -1,16 +1,21 @@
 BASEDIR	=	.
-SOURCE_DIR = ./lib
 
 CC	=	g++
 CXX	=	g++
-CPPFLAGS = -Wall -O2 -I ${BASEDIR}/include
+CPPFLAGS = -Wall -O2 -std=c++11	-I ${BASEDIR}/include
 CFLAGS =
 LDFLAGS = -L ${BASEDIR}/lib
-LDLIBS =	-lpthread
+LDLIBS =	-lsystem_tools	-lsocket4L	-lmraa
 
-PROGRAMAS	=	main
+all:	main
 
-all:	${PROGRAMAS}
+main:	controller.h	controller.cpp
+
+build:
+	cd	src/tools	&&	${MAKE}	install
+	cd	src/socket	&&	${MAKE}	install
 
 clean:
-	rm -f ${PROGRAMAS}
+	rm -f main	*.o
+	cd	src/tools	&&	${MAKE}	clean
+	cd	src/socket	&&	${MAKE}	clean
