@@ -15,7 +15,7 @@
 #define TIME_DEBOUNCE 0.3 //segundos
 #define REF_4_TEMP  27.0   //graus Celcius
 #define REF_4_LUMI  500.0  //unidade de luminocidade
-#define ALPHA 1.0/90     // inverso da maxima temperatura esperada
+#define ALPHA 1.0/54     // inverso da maxima temperatura esperada
 #define BETA 1.0/1000    // inverso da maxima luminancia esperada
 // Modos de operacao
 // Defininem o comportamento do secador de graos
@@ -46,10 +46,10 @@ private:
   mraa::Pwm  pwmDriveFan;
 
   double timeRef_debounce;
-  std::atomic<bool> newData; //Ha dados dos sensores para serem lidos
-  std::atomic<uint8_t> temp; //valor de temperatura em graus celcius
-  std::atomic<uint8_t> lumin;//valor da luminancia
-  std::atomic<float> pwmValueDrive;
+  volatile std::atomic<bool> newData; //Ha dados dos sensores para serem lidos
+  volatile std::atomic<uint8_t> temp; //valor de temperatura em graus celcius
+  volatile std::atomic<uint8_t> lumin;//valor da luminancia
+  volatile std::atomic<float> pwmValueDrive;
 
   // thread para leitura de dados
   std::thread thr_acquisition;

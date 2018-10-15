@@ -1,5 +1,6 @@
 #include <string>
 #include <iostream>
+#include <mutex>
 #include "controller.h"
 
 //Funcoes auxiliares
@@ -16,8 +17,9 @@ void func_acquisition(const void*X){
 void func_button_interrupt(void*X){
   ((Controller*)X)->botton_interrupt();
 }
-
+std::mutex mtx;
 // Metodos da classe controle
+
 
 Controller::Controller():
   serverCtrl(),
@@ -85,18 +87,30 @@ void Controller::pinController(){
         std::this_thread::yield();
       };//aguarda a leitura dos dados
       //entrando na zona critica
-      pwmValueDrive = curve(tools::clock() - t_start)*temp*ALPHA + lumin*BETA;
+      mtx.lock();
+      pwmValueDrive = curve(tools::clock() - t_start)*(temp + REF_4_TEMP)*ALPHA + lumin*BETA/100.0;
+      //saindo da zona critica
       pwmDriveFan.write(pwmValueDrive);
       pwmLedSensor.write(lumin*BETA);
-      //saindo da zona critica
+      mtx.unlock();
+      // if(pwmValueDrive > 1)
+      // {
+      //   std::cout << "PWM:\t"<< pwmValueDrive << '\n';
+      //   std::cout << "Tempo:\t"<< tools::clock() - t_start << '\n';
+      //   std::cout << "Z(t):\t" << curve(tools::clock() - t_start) <<'\n';
+      //   std::cout << "Temp:\t"<<(float)temp << '\n';
+      //   std::cout << "Lumin:\t"<<(float)lumin << '\n';
+      // }
     };
     //sistema passou de habilitado para desabilitado
     gpioLedEnable.write(0);
     pwmDriveFan.write(0);
     pwmLedSensor.write(0);
+    pwmValueDrive = 0;
   }
 
 }
+// std::mutex mtx;
 
 void Controller::acquisition(){
 
@@ -111,12 +125,14 @@ void Controller::acquisition(){
     }
 
     //zona critica
+    mtx.lock();
     this->temp    = aioTemp.read();
     this->lumin   = aioLumi.read();
     temp = temp*(REF_4_TEMP/512.0);
     lumin= lumin*(REF_4_LUMI/512.0);
     this->newData = false;
     //fim da zona critica
+    mtx.unlock();
     // std::this_thread::yield();//volta pro inicio da thread
   }
 
@@ -139,39 +155,28 @@ void Controller::comunication(){
     tools::str2upper(command);
 
     if(command == "REQUEST"){
-      newSock << "OK";
+      while(newData){} //aguarda a thread de acquisition terminar de adquirir novos dados
+      newData = false;
+      mtx.lock();
       newSock << std::to_string(pwmValueDrive);
-      // std::cout << "Print PWM:\t" << (float)pwmValueDrive <<'\n';
-      // std::cout << "Print lumin:\t" << (float)lumin <<'\n';
-      // std::cout << "Print temp:\t"<< (float)temp << '\n';
+      mtx.unlock();
     }
     else if(command == "START"){
-      newSock << "OK";
       enable = true;
     }
     else if(command == "STOP"){
-      newSock << "OK";
       enable = false;
     }
     else if(command == "SHUTDOWN"){
-      newSock << "OK";
       finish = true;
       enable = false;
     }
-    else if(command == "MODE"){
-      newSock << "OK";
-      newSock >> arg;
-      tools::str2upper(arg);
-      if(arg == "1"){
-        newSock << "OK";
-        this->setMode(MODE1);
-      }else if(arg == "2"){
-        newSock << "OK";
-        this->setMode(MODE2);
-      }else{
-        newSock << "INVALID_MODE";
-      }
-
+    else if(command == "MODE_1"){
+      this->setMode(MODE1);
+      std::cout << "Curva 1 selecionada" << '\n';
+    }else if(command == "MODE_2"){
+      this->setMode(MODE2);
+      std::cout << "Curva 2 selecionada" << '\n';
     }
     else{
       newSock << "INVALID_COMMAND";

@@ -11,15 +11,16 @@ int main ()
   std::string dataInput;
 
   server.create();
-  server.bind(30000);
+  server.bind(28500);
 
   std::cout << "running....\n";
   while(true){
+    std::cout << "Aguardando conexao..." << '\n';
     server.listen();
     server.accept(newSock);
     newSock >> dataInput;
-
-    newSock << dataInput;
+    std::cout << "Cliente enviou >> "<< dataInput << '\n';
+    newSock << "5";
     newSock.disconnect();
   }
 
