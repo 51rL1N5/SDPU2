@@ -5,9 +5,9 @@ CXX	=	g++
 CPPFLAGS = -Wall -O2 -I ${BASEDIR}/include
 CFLAGS =
 LDFLAGS = -L ${BASEDIR}/lib
-LDLIBS =
+LDLIBS =	-lsystem_tools
 
-GENERATED	=	teste_server	teste_client
+GENERATED	=	teste_server	teste_client	consumidor
 
 all:	${GENERATED}	libsocket4L.a
 

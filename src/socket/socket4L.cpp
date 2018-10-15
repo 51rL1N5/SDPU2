@@ -1,7 +1,7 @@
 #include <iostream>
 #include <fcntl.h>
 #include <string.h>
-#include <stdlib.h> 
+#include <stdlib.h>
 #include <errno.h>
 #include "socket4L.h"
 
@@ -187,7 +187,6 @@ const Socket& Socket::operator << ( const std::string& s ) const
   if ( !Socket::send(s)){
     // throw SocketException ( "Could not write to socket." );
     std::cerr << "Could not write to socket" << '\n';
-    exit(1);
   }
   return *this;
 }
@@ -197,7 +196,8 @@ const Socket& Socket::operator >> ( std::string& s ) const
   if (!Socket::recv(s)){
     // throw SocketException ( "Could not read from socket." );
     std::cerr << "Could not read from socket." << '\n';
-    exit(1);
+    // exit(1);
+
   }
   return *this;
 }

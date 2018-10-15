@@ -14,20 +14,32 @@ int main ()
 
     std::cout << "msg: ";
     std::cin >> msg;
-    client_socket << msg;
-    client_socket >> resposta;
-    std::cout << "Resposta recebido: "<<resposta << '\n';
 
-    if(msg == "request"){
-      if(resposta == "OK"){
-        client_socket >> valor;
-        std::cout << "Retorno do request: "<< std::stod(valor) << '\n';
-      }else
-        std::cout << "Request Erro" << '\n';
+    if(msg == "exit"){
+      client_socket.disconnect();
+      break;
     }
 
-  }
+    std::cout << "Enviando msg ..." << '\n';
+    client_socket << msg;      //envia msg via socket
 
+    if(msg == "request"){
+      std::cout << "Aguardando resposta..." << '\n';
+      client_socket >> resposta; //recebe msg via socket
+      std::cout << "Resposta recebido: "<<resposta << '\n';
+    }
+
+
+    // if(msg == "request"){
+    //   if(resposta == "OK"){
+    //     client_socket >> valor;
+    //     std::cout << "Retorno do request: "<< std::stod(valor) << '\n';
+    //   }else
+    //     std::cout << "Request Erro" << '\n';
+    // }
+
+  }
+  std::cout << "conexao encerrada..." << '\n';
 
   return 0;
 }
